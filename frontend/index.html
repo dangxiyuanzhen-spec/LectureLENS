@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LectureLens Pro</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #020617;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      color: #22c55e;
+      margin-bottom: 16px;
+    }
+    .toolbar {
+      margin-bottom: 16px;
+    }
+    select, button {
+      padding: 10px 14px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+    }
+    select {
+      background: #111827;
+      color: white;
+      border: 1px solid #334155;
+    }
+    button {
+      background: #16a34a;
+      color: white;
+      cursor: pointer;
+    }
+    .panel {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+    #original,
+    #translated,
+    #summary,
+    #terms,
+    #exam,
+    #notes {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+    }
+    #original {
+      color: #93c5fd;
+      font-size: 18px;
+    }
+    #translated {
+      font-size: 20px;
+    }
+    #summary,
+    #terms,
+    #exam,
+    #notes {
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+  <h1>LectureLens Pro</h1>
+
+  <div class="toolbar">
+    <select id="courseSelect">
+      <option>Digital Marketing</option>
+      <option>Firm Value Evaluation</option>
+      <option>Drama Korean</option>
+      <option>Korean Current Issues</option>
+      <option>Today Korea</option>
+      <option>Korean Culture Trends</option>
+    </select>
+
+    <button id="recordBtn">Start Lecture</button>
+    <button id="saveBtn">Export Word</button>
+  </div>
+
+  <div class="panel">
+    <h2>Original</h2>
+    <div id="original">Waiting...</div>
+  </div>
+
+  <div class="panel">
+    <h2>Translation</h2>
+    <div id="translated"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Summary</h2>
+    <div id="summary"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Key Terms</h2>
+    <div id="terms"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Exam Points</h2>
+    <div id="exam"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Lecture Notes</h2>
+    <div id="notes"></div>
+  </div>
+
+  <script>
+    let lectureNotes = "";
+    let recording = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    const recordBtn = document.getElementById("recordBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    const originalBox = document.getElementById("original");
+    const translatedBox = document.getElementById("translated");
+    const summaryBox = document.getElementById("summary");
+    const termsBox = document.getElementById("terms");
+    const examBox = document.getElementById("exam");
+    const notesBox = document.getElementById("notes");
+    const courseSelect = document.getElementById("courseSelect");
+
+    recordBtn.addEventListener("click", toggleLecture);
+    saveBtn.addEventListener("click", saveLecture);
+
+    async function toggleLecture() {
+      if (recording) {
+        recording = false;
+        recordBtn.innerText = "Start Lecture";
+        originalBox.innerText = "Stopped.";
+        return;
+      }
+
+      recording = true;
+      recordBtn.innerText = "Stop Lecture";
+      originalBox.innerText = "Listening...";
+      loopRecord();
+    }
+
+    async function loopRecord() {
+      if (!recording) return;
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            audioChunks.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          try {
+            stream.getTracks().forEach(track => track.stop());
+
+            const blob = new Blob(audioChunks, { type: "audio/webm" });
+
+            if (blob.size < 1000) {
+              originalBox.innerText = "Audio too short.";
+              if (recording) loopRecord();
+              return;
+            }
+
+            const formData = new FormData();
+            formData.append("audio", blob, "lecture.webm");
+
+            originalBox.innerText = "Uploading...";
+
+            const res = await fetch("http://localhost:3000/transcribe", {
+              method: "POST",
+              body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+              originalBox.innerText = "Transcribe error: " + (data.error || "Unknown error");
+              if (recording) loopRecord();
+              return;
+            }
+
+            const text = data.text || "";
+
+            if (!text.trim()) {
+              originalBox.innerText = "No speech detected.";
+              if (recording) loopRecord();
+              return;
+            }
+
+            originalBox.innerText = text;
+
+            const analyzeRes = await fetch("http://localhost:3000/analyze", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ text })
+            });
+
+            const result = await analyzeRes.json();
+
+            if (!analyzeRes.ok) {
+              translatedBox.innerText = "Analyze error: " + (result.error || "Unknown error");
+              if (recording) loopRecord();
+              return;
+            }
+
+            translatedBox.innerText = result.translation || "";
+            summaryBox.innerText = result.summary || "";
+            termsBox.innerText = (result.terms || []).join("\n");
+            examBox.innerText = (result.exam_points || []).join("\n");
+
+            const block =
+`${courseSelect.value}
+
+Original:
+${text}
+
+Translation:
+${result.translation || ""}
+
+Summary:
+${result.summary || ""}
+
+Terms:
+${(result.terms || []).join(", ")}
+
+Exam Points:
+${(result.exam_points || []).join(", ")}
+
+----------------------------------------
+`;
+
+            lectureNotes += block;
+            notesBox.innerText = lectureNotes;
+
+            if (recording) {
+              setTimeout(() => {
+                loopRecord();
+              }, 1000);
+            }
+          } catch (e) {
+            originalBox.innerText = "Process error: " + e.message;
+            if (recording) loopRecord();
+          }
+        };
+
+        mediaRecorder.start();
+
+        setTimeout(() => {
+          if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop();
+          }
+        }, 8000);
+
+      } catch (e) {
+        originalBox.innerText = "Mic error: " + e.message;
+      }
+    }
+
+    function saveLecture() {
+      const course = courseSelect.value;
+
+      const html = `
+      <html>
+        <head><meta charset="UTF-8"></head>
+        <body>
+          <h2>${course}</h2>
+          <pre>${lectureNotes}</pre>
+        </body>
+      </html>
+      `;
+
+      const blob = new Blob(["\ufeff", html], {
+        type: "application/msword"
+      });
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${course}_lecture.doc`;
+      a.click();
+    }
+  </script>
+</body>
+</html>

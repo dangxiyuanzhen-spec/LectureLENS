@@ -1,317 +1,911 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LectureLens Pro</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #020617;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-    h1 {
-      color: #22c55e;
-      margin-bottom: 16px;
-    }
+<title>ClassLens</title>
 
-    .toolbar {
-      margin-bottom: 16px;
-    }
+<style>
 
-    select, button {
-      padding: 10px 14px;
-      margin-right: 8px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      border: none;
-      font-size: 15px;
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
 
-    select {
-      background: #111827;
-      color: white;
-      border: 1px solid #334155;
-    }
+body{
+background:#020617;
+color:white;
+padding:16px;
+}
 
-    button {
-      background: #16a34a;
-      color: white;
-      cursor: pointer;
-    }
+.page{
+display:none;
+}
 
-    button:hover {
-      background: #15803d;
-    }
+.page.active{
+display:block;
+}
 
-    .box {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 14px;
-      min-height: 70px;
-      white-space: pre-wrap;
-    }
+.hero{
+background:linear-gradient(135deg,#064e3b,#0f172a);
+padding:24px;
+border-radius:24px;
+margin-bottom:20px;
+}
 
-    .label {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: #f8fafc;
-    }
+.hero h1{
+font-size:32px;
+margin-bottom:8px;
+}
 
-    .muted {
-      color: #94a3b8;
-    }
-  </style>
+.hero p{
+color:#cbd5e1;
+}
+
+.main-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-bottom:20px;
+}
+
+.main-card{
+background:#111827;
+border:1px solid #334155;
+padding:20px;
+border-radius:20px;
+cursor:pointer;
+transition:0.2s;
+}
+
+.main-card:hover{
+border-color:#22c55e;
+transform:translateY(-2px);
+}
+
+.main-card h3{
+margin-top:10px;
+margin-bottom:8px;
+}
+
+.main-card p{
+font-size:14px;
+color:#94a3b8;
+}
+
+.card{
+background:#0f172a;
+padding:16px;
+border-radius:16px;
+border:1px solid #334155;
+margin-bottom:12px;
+}
+
+.btn{
+background:#16a34a;
+border:none;
+padding:10px 16px;
+border-radius:12px;
+color:white;
+cursor:pointer;
+}
+
+.btn:hover{
+background:#15803d;
+}
+
+.nav{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.nav button{
+background:#111827;
+color:white;
+border:none;
+padding:10px 14px;
+border-radius:10px;
+cursor:pointer;
+}
+
+.nav button:hover{
+background:#1e293b;
+}
+
+input,
+select,
+textarea{
+width:100%;
+padding:12px;
+margin-top:8px;
+margin-bottom:12px;
+border-radius:10px;
+border:1px solid #334155;
+background:#111827;
+color:white;
+}
+
+textarea{
+min-height:120px;
+}
+
+.red{
+color:#ef4444;
+font-weight:bold;
+}
+
+.yellow{
+background:#facc15;
+color:black;
+padding:2px 4px;
+border-radius:4px;
+font-weight:bold;
+}
+
+.blue{
+background:#60a5fa;
+color:black;
+padding:2px 4px;
+border-radius:4px;
+font-weight:bold;
+}
+
+.green{
+background:#86efac;
+color:black;
+padding:2px 4px;
+border-radius:4px;
+font-weight:bold;
+}
+
+@media(max-width:900px){
+
+.main-grid{
+grid-template-columns:1fr;
+}
+
+}
+
+</style>
 </head>
+
 <body>
-  <h1>LectureLens Pro</h1>
 
-  <div class="toolbar">
-    <select id="courseSelect">
-      <option value="Digital Marketing">Digital Marketing</option>
-      <option value="Economics">Economics</option>
-      <option value="Business English">Business English</option>
-      <option value="Finance">Finance</option>
-    </select>
+<div class="nav">
 
-    <button id="startBtn">Start Lecture</button>
-    <button id="exportBtn">Export Word</button>
-  </div>
+<button onclick="showPage('home')">
+首页
+</button>
 
-  <div class="box">
-    <div class="label">Original</div>
-    <div id="originalBox" class="muted">Waiting...</div>
-  </div>
+<button onclick="showPage('courses')">
+课程
+</button>
 
-  <div class="box">
-    <div class="label">Translation</div>
-    <div id="translatedBox"></div>
-  </div>
+<button onclick="showPage('ppt')">
+PPT
+</button>
 
-  <div class="box">
-    <div class="label">Summary</div>
-    <div id="summaryBox"></div>
-  </div>
+<button onclick="showPage('lecture')">
+实时同传
+</button>
 
-  <div class="box">
-    <div class="label">Key Terms</div>
-    <div id="termsBox"></div>
-  </div>
+<button onclick="showPage('notes')">
+AI笔记
+</button>
 
-  <div class="box">
-    <div class="label">Exam Points</div>
-    <div id="examBox"></div>
-  </div>
+<button onclick="showPage('exam')">
+复习包
+</button>
 
-  <div class="box">
-    <div class="label">Lecture Notes</div>
-    <div id="notesBox"></div>
-  </div>
+<button onclick="showPage('archive')">
+档案馆
+</button>
 
-  <script>
-    const API_BASE = "https://lecturelens-api.onrender.com";
+<button onclick="showPage('settings')">
+设置
+</button>
 
-    const startBtn = document.getElementById("startBtn");
-    const exportBtn = document.getElementById("exportBtn");
-    const courseSelect = document.getElementById("courseSelect");
+</div>
 
-    const originalBox = document.getElementById("originalBox");
-    const translatedBox = document.getElementById("translatedBox");
-    const summaryBox = document.getElementById("summaryBox");
-    const termsBox = document.getElementById("termsBox");
-    const examBox = document.getElementById("examBox");
-    const notesBox = document.getElementById("notesBox");
+<div id="home" class="page active">
 
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recording = false;
+<div class="hero">
 
-    function resetUI() {
-      originalBox.innerText = "Waiting...";
-      translatedBox.innerText = "";
-      summaryBox.innerText = "";
-      termsBox.innerText = "";
-      examBox.innerText = "";
-      notesBox.innerText = "";
-    }
+<h1>ClassLens</h1>
 
-    async function transcribeAudio(blob) {
-      const formData = new FormData();
-      formData.append("audio", blob, "lecture.webm");
+<p>
+上传PPT → 开始上课 → 自动生成双语笔记
+</p >
 
-      const res = await fetch(`${API_BASE}/transcribe`, {
-        method: "POST",
-        body: formData
-      });
+</div>
 
-      const data = await res.json();
+<div class="main-grid">
 
-      if (!res.ok) {
-        throw new Error(data.error || "Transcribe failed");
-      }
+<div class="main-card"
+onclick="showPage('ppt')">
 
-      return data.text || "";
-    }
+<h2>📄</h2>
 
-    async function analyzeText(text) {
-      const res = await fetch(`${API_BASE}/analyze`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ text })
-      });
+<h3>PPT上传</h3>
 
-      const data = await res.json();
+<p>
+上传教授PPT
+建立课程知识库
+</p >
 
-      if (!res.ok) {
-        throw new Error(data.error || "Analyze failed");
-      }
+</div>
 
-      return data;
-    }
+<div class="main-card"
+onclick="showPage('lecture')">
 
-    async function processAudio(blob) {
-      try {
-        originalBox.innerText = "Transcribing...";
+<h2>🎙️</h2>
 
-        const text = await transcribeAudio(blob);
+<h3>实时同传</h3>
 
-        if (!text.trim()) {
-          originalBox.innerText = "No speech detected.";
-          return;
-        }
+<p>
+实时录音
+实时翻译
+实时字幕
+</p >
 
-        originalBox.innerText = text;
-        translatedBox.innerText = "Analyzing...";
-        summaryBox.innerText = "Analyzing...";
-        termsBox.innerText = "Analyzing...";
-        examBox.innerText = "Analyzing...";
-        notesBox.innerText = "Analyzing...";
+</div>
 
-        const result = await analyzeText(text);
+<div class="main-card"
+onclick="showPage('notes')">
 
-        translatedBox.innerText = result.translation || "";
-        summaryBox.innerText = result.summary || "";
-        termsBox.innerText = Array.isArray(result.terms)
-          ? result.terms.join(" / ")
-          : "";
-        examBox.innerText = Array.isArray(result.exam_points)
-          ? result.exam_points.join("\n")
-          : "";
+<h2>📝</h2>
 
-        notesBox.innerText =
-          `Course: ${courseSelect.value}\n\n` +
-          `Original:\n${text}\n\n` +
-          `Translation:\n${result.translation || ""}\n\n` +
-          `Summary:\n${result.summary || ""}\n\n` +
-          `Key Terms:\n${
-            Array.isArray(result.terms) ? result.terms.join(", ") : ""
-          }\n\n` +
-          `Exam Points:\n${
-            Array.isArray(result.exam_points) ? result.exam_points.join("\n") : ""
-          }`;
-      } catch (err) {
-        console.error(err);
-        originalBox.innerText = `Process error: ${err.message}`;
-        translatedBox.innerText = "";
-        summaryBox.innerText = "";
-        termsBox.innerText = "";
-        examBox.innerText = "";
-        notesBox.innerText = "";
-      }
-    }
+<h3>AI笔记</h3>
 
-    async function startRecording() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+<p>
+双语笔记
+考试重点
+课堂时间轴
+</p >
 
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
+</div>
 
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunks.push(event.data);
-          }
-        };
+</div>
 
-        mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: "audio/webm" });
-          await processAudio(blob);
+<div class="card">
 
-          stream.getTracks().forEach(track => track.stop());
-        };
+<h3>📚 我的课程</h3>
 
-        mediaRecorder.start();
-        recording = true;
-        startBtn.innerText = "Stop Lecture";
-        originalBox.innerText = "Recording...";
-      } catch (err) {
-        console.error(err);
-        originalBox.innerText = `Mic error: ${err.message}`;
-      }
-    }
+<p>
+上传课程表后自动识别课程
+</p >
 
-    function stopRecording() {
-      if (mediaRecorder && recording) {
-        mediaRecorder.stop();
-      }
-      recording = false;
-      startBtn.innerText = "Start Lecture";
-    }
+</div>
 
-    startBtn.addEventListener("click", async () => {
-      if (!recording) {
-        resetUI();
-        await startRecording();
-      } else {
-        stopRecording();
-      }
-    });
+<div class="card">
 
-    exportBtn.addEventListener("click", () => {
-      const content =
-`LectureLens Pro
+<h3>🎯 考试复习包</h3>
 
-Course:
-${courseSelect.value}
+<p>
+根据教授考试范围生成
+</p >
 
-Original:
-${originalBox.innerText}
+</div>
 
-Translation:
-${translatedBox.innerText}
+<div class="card">
 
-Summary:
-${summaryBox.innerText}
+<h3>📁 学习档案馆</h3>
 
-Key Terms:
-${termsBox.innerText}
+<p>
+自动归档所有课堂内容
+</p >
 
-Exam Points:
-${examBox.innerText}
+</div>
 
-Lecture Notes:
-${notesBox.innerText}
+</div>
+<!-- 我的课程 -->
+
+<div id="courses" class="page">
+
+<div class="card">
+
+<h2>📚 我的课程</h2>
+
+<label>学习阶段</label>
+
+<select id="degree">
+
+<option>本科</option>
+<option>硕士1年制</option>
+<option>硕士1.5年制</option>
+<option>硕士2年制</option>
+<option>博士</option>
+
+</select>
+
+<label>学期</label>
+
+<select id="semester">
+
+<option>大一上</option>
+<option>大一下</option>
+<option>大二上</option>
+<option>大二下</option>
+<option>大三上</option>
+<option>大三下</option>
+<option>大四上</option>
+<option>大四下</option>
+
+<option>硕士1-1</option>
+<option>硕士1-2</option>
+
+<option>博士1-1</option>
+<option>博士1-2</option>
+
+</select>
+
+<label>上传课程表</label>
+
+<input
+type="file"
+accept="image/*,.pdf">
+
+<button class="btn">
+识别课程表
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>识别课程</h3>
+
+<div id="courseList">
+
+课程识别后显示
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- PPT -->
+
+<div id="ppt" class="page">
+
+<div class="card">
+
+<h2>📄 PPT上传</h2>
+
+<input
+type="file"
+accept=".pdf,.ppt,.pptx">
+
+<button class="btn">
+
+分析PPT结构
+
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>PPT智能关联系统</h3>
+
+<p>
+
+当前页面：
+
+PPT第12页
+
+Consumer Behavior
+
+</p >
+
+</div>
+
+<div class="card">
+
+<h3>AI
+<!-- AI笔记 -->
+
+<div id="notes" class="page">
+
+<div class="card">
+
+<h2>📝 AI笔记</h2>
+
+<button class="btn" onclick="generateSmartNotes()">
+生成智能课堂笔记
+</button>
+
+<button class="btn" onclick="exportNotes()">
+导出笔记
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>📄 PPT第18页</h3>
+
+<div id="smartNotes">
+
+等待生成AI笔记...
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>课堂时间轴</h3>
+
+<div id="timeline">
+
+等待生成时间轴...
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- 考试复习包 -->
+
+<div id="exam" class="page">
+
+<div class="card">
+
+<h2>🎯 考试复习包</h2>
+
+<label>考试类型</label>
+
+<select id="examType">
+
+<option>期中考试</option>
+<option>期末考试</option>
+<option>小测验</option>
+<option>补考</option>
+
+</select>
+
+<label>导出样式</label>
+
+<select id="noteStyle">
+
+<option value="formal">提交作业版</option>
+<option value="handwritten">手写笔记版</option>
+<option value="cute">可爱学习版</option>
+
+</select>
+
+<label>教授说明的考试范围</label>
+
+<textarea
+id="examScope"
+placeholder="例如：시험 범위는 3장부터 6장까지입니다. STP, 4P 중심으로 공부하세요.">
+</textarea>
+
+<button class="btn" onclick="generateExamPack()">
+生成复习包
+</button>
+
+<button class="btn" onclick="exportExamPack()">
+导出复习包
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>复习资料预览</h3>
+
+<div id="examPack">
+
+等待生成复习包...
+
+</div>
+
+</div>
+
+</div>
+<!-- 学习档案馆 -->
+
+<div id="archive" class="page">
+
+<div class="card">
+
+<h2>📁 学习档案馆</h2>
+
+<p>按学期自动归档</p >
+
+</div>
+
+<div class="card">
+
+<h3>2026 Spring</h3>
+
+<p>
+课程：3门<br>
+笔记：15份<br>
+复习包：2份<br>
+PPT：8份
+</p >
+
+</div>
+
+<div class="card">
+
+<h3>2026 Summer</h3>
+
+<p>
+暑期课程档案
+</p >
+
+</div>
+
+<div class="card">
+
+<h3>2026 Fall</h3>
+
+<p>
+秋季课程档案
+</p >
+
+</div>
+
+</div>
+
+
+<!-- 设置 -->
+
+<div id="settings" class="page">
+
+<div class="card">
+
+<h2>⚙️ 设置</h2>
+
+<label>母语</label>
+
+<select>
+
+<option>中文</option>
+<option>English</option>
+<option>日本語</option>
+<option>한국어</option>
+<option>Tiếng Việt</option>
+<option>ไทย</option>
+
+</select>
+
+<label>所在国家</label>
+
+<select>
+
+<option>韩国</option>
+<option>日本</option>
+<option>美国</option>
+<option>英国</option>
+<option>新加坡</option>
+
+</select>
+
+</div>
+
+<div class="card">
+
+<h3>颜色规则</h3>
+
+<p>
+
+<span class="red">红色</span>
+= 考试重点
+
+</p >
+
+<p>
+
+<span class="yellow">
+黄色
+</span>
+
+= 专业词汇
+
+</p >
+
+<p>
+
+<span class="blue">
+蓝色
+</span>
+
+= 语法
+
+</p >
+
+<p>
+
+<span class="green">
+绿色
+</span>
+
+= 例子
+
+</p >
+
+</div>
+
+</div>
+
+
+
+<script>
+
+function showPage(pageId){
+
+document
+.querySelectorAll(".page")
+.forEach(page=>{
+
+page.classList.remove("active");
+
+});
+
+document
+.getElementById(pageId)
+.classList.add("active");
+
+}
+
+
+
+function generateSmartNotes(){
+
+document.getElementById("smartNotes").innerHTML=`
+
+📄 PPT第18页
+
+消费者决策模型
+
+━━━━━━━━━━━━━━
+
+📚 课程内容
+
+消费者决策过程：
+
+问题认知
+
+信息搜集
+
+方案评估
+
+购买决策
+
+购后评价
+
+━━━━━━━━━━━━━━
+
+⭐ 教授强调
+
+去年考试考过
+
+今年可能继续出现
+
+━━━━━━━━━━━━━━
+
+💬 教授闲聊
+
+昨天首尔下大雨
+
+很多学生迟到了
+
+━━━━━━━━━━━━━━
+
+📢 课程通知
+
+下周停课一次
+
 `;
 
-      const blob = new Blob([content], {
-        type: "application/msword"
-      });
+document.getElementById("timeline").innerHTML=`
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "lecture-notes.doc";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-  </script>
+09:00
+课程开始
+
+━━━━━━━━━━━━━━
+
+09:12
+PPT第3页
+
+消费者行为定义
+
+━━━━━━━━━━━━━━
+
+09:35
+教授闲聊
+
+韩国消费趋势
+
+━━━━━━━━━━━━━━
+
+09:55
+消费者决策模型
+
+`;
+
+}
+
+
+
+function generateExamPack(){
+
+const scope=
+document.getElementById("examScope").value;
+
+document.getElementById("examPack").innerHTML=`
+
+<h3>考试复习包</h3>
+
+<p>
+
+<span class="red">
+
+考试范围：
+
+</span>
+
+${scope}
+
+</p >
+
+<hr>
+
+<h3>词汇</h3>
+
+<p>
+
+<span class="yellow">
+
+Consumer Behavior
+
+</span>
+
+消费者行为
+
+</p >
+
+<p>
+
+<span class="yellow">
+
+STP
+
+</span>
+
+市场细分定位
+
+</p >
+
+<hr>
+
+<h3>语法</h3>
+
+<p>
+
+<span class="blue">
+
+-(으)ㄹ 수 있다
+
+</span>
+
+可以……
+
+</p >
+
+<p>
+
+<span class="blue">
+
+-기 때문에
+
+</span>
+
+因为……
+
+</p >
+
+<hr>
+
+<h3>教授强调</h3>
+
+<p>
+
+<span class="red">
+
+重点背诵
+
+</span>
+
+</p >
+
+<p>
+
+<span class="red">
+
+高频考点
+
+</span>
+
+</p >
+
+<hr>
+
+<h3>案例</h3>
+
+<p>
+
+<span class="green">
+
+三星电子案例
+
+</span>
+
+</p >
+
+`;
+
+}
+
+
+
+function exportNotes(){
+
+alert("后续接入Word/PDF导出");
+
+}
+
+
+
+function exportExamPack(){
+
+alert("后续接入Word/PDF导出");
+
+}
+
+
+
+document
+.getElementById("startBtn")
+.addEventListener("click",()=>{
+
+document
+.getElementById("originalBox")
+.innerHTML="正在录音...";
+
+document
+.getElementById("translatedBox")
+.innerHTML="实时翻译启动";
+
+document
+.getElementById("summaryBox")
+.innerHTML="AI课堂总结生成中";
+
+document
+.getElementById("keywordBox")
+.innerHTML="关键词提取中";
+
+document
+.getElementById("examBox")
+.innerHTML="考试重点识别中";
+
+});
+
+</script>
+
 </body>
 </html>

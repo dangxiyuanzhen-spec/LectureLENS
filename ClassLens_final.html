@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ClassLens · AI课堂透镜</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,"Noto Sans SC","Noto Sans KR",sans-serif}
+body{background:#020617;color:#fff;min-height:100vh;padding:14px}
+button,input,select,textarea{font:inherit}.page{display:none}.page.active{display:block}
+.nav{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.nav button{background:#111827;color:#fff;border:1px solid #334155;padding:9px 13px;border-radius:10px;cursor:pointer}.nav button.active,.nav button:hover{background:#166534;border-color:#22c55e}
+.hero{background:linear-gradient(135deg,#064e3b,#0f172a);padding:24px;border-radius:22px;margin-bottom:14px}.hero h1{font-size:32px;margin-bottom:8px}.hero p,.muted{color:#94a3b8}
+.card{background:#0f172a;border:1px solid #334155;border-radius:18px;padding:16px;margin-bottom:12px}.main-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.main-card{background:#111827;border:1px solid #334155;padding:20px;border-radius:18px;cursor:pointer}.main-card:hover{border-color:#22c55e}
+.btn{background:#16a34a;color:#fff;border:0;border-radius:11px;padding:10px 15px;cursor:pointer}.btn.secondary{background:#1e293b}.btn.stop{background:#dc2626}.btn:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{width:100%;padding:10px;margin:7px 0 12px;border-radius:10px;border:1px solid #334155;background:#111827;color:#fff}textarea{min-height:120px}
+/* ===== 专业同传工作台 ===== */
+.sync-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.status{padding:8px 12px;border-radius:999px;background:#1e293b;color:#cbd5e1;font-size:13px}.status.live{background:#14532d;color:#bbf7d0}
+.sync-grid{display:grid;grid-template-columns:1.18fr 1.45fr .82fr;gap:12px;min-height:72vh}.panel{background:#0b1220;border:1px solid #334155;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;min-height:600px}.panel-head{padding:13px 15px;background:#111827;border-bottom:1px solid #334155;display:flex;justify-content:space-between;align-items:center;gap:10px}.panel-head h3{font-size:16px}.panel-body{padding:14px;overflow:auto;flex:1}
+.ppt-view{height:100%;display:flex;flex-direction:column;gap:12px}.ppt-slide{background:#f8fafc;color:#0f172a;border-radius:12px;min-height:310px;padding:22px;box-shadow:0 5px 20px #0005;transition:.25s}.ppt-slide h2{font-size:24px;margin-bottom:14px}.ppt-slide p{font-size:17px;line-height:1.75}.slide-num{color:#64748b;font-size:12px}.ppt-slide.current-slide{outline:3px solid #22c55e;transform:scale(1.01)}
+.live-caption{position:sticky;top:0;z-index:3;background:#07101d;border:1px solid #243244;border-radius:13px;padding:13px;margin-bottom:12px}.live-caption .label{font-size:11px;color:#64748b;margin-bottom:5px}.live-caption .original{font-size:16px;line-height:1.55}.live-caption .translation{font-size:20px;line-height:1.55;color:#86efac;margin-top:6px;font-weight:600}.transcript{display:flex;flex-direction:column;gap:9px}.segment{background:#111827;border:1px solid #263449;border-radius:13px;padding:11px}.segment.current{border-color:#22c55e;background:#0b2618}.segment .time{font-size:11px;color:#64748b;margin-bottom:6px}.original{font-size:15px;color:#e2e8f0;line-height:1.55}.translation{font-size:17px;color:#86efac;line-height:1.6;margin-top:5px}.partial{opacity:.72}
+.term-list{display:flex;flex-direction:column;gap:9px}.term{border:1px solid #334155;background:#111827;border-radius:12px;padding:11px;animation:termIn .2s ease}.term strong{color:#fde047}.term .cn{color:#86efac;margin-top:3px}.term .en{color:#93c5fd;font-size:13px;margin-top:2px}.term .source{font-size:11px;color:#64748b;margin-top:6px}@keyframes termIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.empty{color:#64748b;text-align:center;padding:30px 10px}.meter{height:6px;background:#1e293b;border-radius:99px;overflow:hidden;margin-top:9px}.meter i{display:block;height:100%;width:0;background:#22c55e;transition:.15s}.mini{font-size:12px;color:#94a3b8}.toolbar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.course-chip{display:inline-flex;padding:8px 10px;border:1px solid #334155;border-radius:10px;margin:5px;cursor:pointer;background:#111827}.course-chip.selected{border-color:#22c55e;background:#14532d}.notice{background:#172033;border:1px solid #334155;padding:11px;border-radius:12px;color:#cbd5e1;margin-top:10px}
+@media(max-width:1050px){.sync-grid{grid-template-columns:1fr}.panel{min-height:420px}.main-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+<button class="active" onclick="showPage('home',this)">首页</button>
+<button onclick="showPage('courses',this)">课程</button>
+<button onclick="showPage('ppt',this)">PPT</button>
+<button onclick="showPage('lecture',this)">实时同传</button>
+<button onclick="showPage('notes',this)">AI笔记</button>
+<button onclick="showPage('exam',this)">复习包</button>
+<button onclick="showPage('archive',this)">档案馆</button>
+<button onclick="showPage('settings',this)">设置</button>
+</div>
+
+<!-- 首页：保留原来的模块结构 -->
+<div id="home" class="page active">
+<div class="hero"><h1>ClassLens</h1><p>上传PPT → 选择课程 → 打开专业同传 → PPT实时跟随 → 专业术语实时提取 → 自动生成双语学习资料</p></div>
+<div class="main-grid">
+<div class="main-card" onclick="showPage('ppt')"><h2>📄</h2><h3>PPT上传</h3><p>上传教授PPT，建立课程知识库并用于课堂同步。</p></div>
+<div class="main-card" onclick="showPage('lecture')"><h2>🎙️</h2><h3>实时同传</h3><p>实时语音识别、实时翻译、实时字幕、PPT跟随。</p></div>
+<div class="main-card" onclick="showPage('notes')"><h2>📝</h2><h3>AI笔记</h3><p>双语笔记、专业术语、教授重点、课堂时间轴。</p></div>
+</div>
+<div class="card"><h3>📚 我的课程</h3><p class="muted" style="margin-top:7px">先选择今天的课程，再进入同传。正式版可以由OCR自动读取课程表。</p></div>
+<div class="card"><h3>🎯 考试复习包</h3><p class="muted" style="margin-top:7px">根据课堂内容、PPT和教授强调内容自动生成。</p></div>
+<div class="card"><h3>📁 学习档案馆</h3><p class="muted" style="margin-top:7px">按学期 → 课程 → 日期保存课堂记录。</p></div>
+</div>
+
+<!-- 课程 -->
+<div id="courses" class="page">
+<div class="card"><h2>📚 我的课程</h2>
+<label>课程名称</label><input id="courseName" placeholder="例如：Digital Marketing / 소비자행동론">
+<label>上传课程表</label><input type="file" accept="image/*,.pdf" id="scheduleFile">
+<button class="btn" onclick="recognizeSchedule()">识别课程表</button>
+<div class="notice">当前演示版先提供课程选择。接入OCR/API后，可以把你拍的课程表图片自动识别成下面的课程卡片。</div>
+<div id="courseList" style="margin-top:12px">
+<span class="course-chip selected" onclick="selectCourse(this,'Digital Marketing')">Digital Marketing</span>
+<span class="course-chip" onclick="selectCourse(this,'Consumer Behavior')">Consumer Behavior</span>
+<span class="course-chip" onclick="selectCourse(this,'재무관리')">재무관리</span>
+</div>
+</div></div>
+
+<!-- PPT -->
+<div id="ppt" class="page">
+<div class="card"><h2>📄 PPT上传</h2>
+<input type="file" accept=".pdf,.ppt,.pptx" id="pptFile">
+<div class="toolbar-row"><button class="btn" onclick="loadDemoPPT()">载入演示PPT</button><span class="mini">正式版：后端解析真实PPT页码、文本和关键词。</span></div>
+</div>
+<div class="card"><h3>PPT → 课堂同步</h3><p class="muted" style="margin-top:7px">同传启动后，中间字幕根据老师当前讲话实时更新；左侧PPT会自动滚动到匹配页。</p></div>
+</div>
+
+<!-- 实时同传：用户要求的核心布局 -->
+<div id="lecture" class="page">
+<div class="sync-toolbar">
+<button id="startBtn" class="btn" onclick="startLive()">▶ 开始专业同传</button>
+<button id="stopBtn" class="btn stop" onclick="stopLive()">■ 停止</button>
+<button class="btn secondary" onclick="clearLive()">清空课堂</button>
+<span id="liveStatus" class="status">● 未开始</span>
+<span id="courseBadge" class="status">当前课程：Digital Marketing</span>
+<span id="micState" class="status">麦克风待机</span>
+</div>
+
+<div class="sync-grid">
+<!-- 左：PPT实时滚动 -->
+<section class="panel">
+<div class="panel-head"><h3>📄 PPT · 实时滚动</h3><span id="slideIndicator" class="muted">第 1 / 5 页</span></div>
+<div class="panel-body">
+<div id="pptView" class="ppt-view">
+<div class="ppt-slide current-slide" data-slide="1" data-keywords="digital marketing 数字营销 디지털 마케팅"><div class="slide-num">SLIDE 01</div><h2>Digital Marketing</h2><p>Introduction to digital marketing and consumer behavior.</p></div>
+<div class="ppt-slide" data-slide="2" data-keywords="consumer behavior 消费者行为 소비자 행동 problem information"><div class="slide-num">SLIDE 02</div><h2>Consumer Behavior</h2><p>Consumers recognize a problem, search for information, evaluate alternatives, make a purchase and evaluate the result.</p></div>
+<div class="ppt-slide" data-slide="3" data-keywords="stp strategy segmentation targeting positioning 시장 세분화 목표 시장 포지셔닝"><div class="slide-num">SLIDE 03</div><h2>STP Strategy</h2><p>Segmentation · Targeting · Positioning</p></div>
+<div class="ppt-slide" data-slide="4" data-keywords="marketing mix product price place promotion 마케팅 믹스"><div class="slide-num">SLIDE 04</div><h2>Marketing Mix</h2><p>Product · Price · Place · Promotion</p></div>
+<div class="ppt-slide" data-slide="5" data-keywords="customer journey awareness consideration conversion retention 고객 여정"><div class="slide-num">SLIDE 05</div><h2>Customer Journey</h2><p>Awareness → Consideration → Conversion → Retention</p></div>
+</div>
+</div></section>
+
+<!-- 中：实时同传 -->
+<section class="panel">
+<div class="panel-head"><h3>🎙️ 实时专业同传</h3><span class="mini">原文 → 中文</span></div>
+<div class="panel-body">
+<div class="live-caption"><div class="label">CURRENT LIVE CAPTION</div><div id="liveOriginal" class="original">等待老师讲话…</div><div id="liveTranslation" class="translation">实时翻译将在这里出现</div></div>
+<div class="meter"><i id="audioMeter"></i></div>
+<div id="transcript" class="transcript" style="margin-top:12px"><div class="empty">点击“开始专业同传”。浏览器支持语音识别时会使用真实麦克风；正式生产环境请接后端实时语音/翻译服务。</div></div>
+</div></section>
+
+<!-- 右：实时术语 -->
+<section class="panel">
+<div class="panel-head"><h3>🔤 专业术语</h3><span class="mini">实时提取</span></div>
+<div class="panel-body"><div id="terms" class="term-list"><div class="empty">老师一说到专业词，这里立即出现。</div></div></div>
+</section>
+</div>
+</div>
+
+<div id="notes" class="page"><div class="card"><h2>📝 AI笔记</h2><button class="btn" onclick="generateNotes()">生成智能课堂笔记</button></div><div class="card"><div id="smartNotes" class="muted">等待生成…</div></div></div>
+<div id="exam" class="page"><div class="card"><h2>🎯 考试复习包</h2><textarea id="examScope" placeholder="例如：시험 범위는 3장부터 6장까지입니다. STP 중심으로 공부하세요."></textarea><button class="btn" onclick="generateExamPack()">生成复习包</button></div><div class="card"><div id="examPack" class="muted">等待生成…</div></div></div>
+<div id="archive" class="page"><div class="card"><h2>📁 学习档案馆</h2><p class="muted">按学期、课程、日期自动归档课堂记录。</p></div></div>
+<div id="settings" class="page"><div class="card"><h2>⚙️ 设置</h2><label>母语</label><select><option>中文</option><option>English</option><option>日本語</option><option>한국어</option></select><label>目标翻译语言</label><select id="targetLang"><option value="zh-CN">中文</option><option value="en">English</option><option value="ja">日本語</option><option value="ko">한국어</option></select></div></div>
+
+<script>
+/* =========================================================
+   ClassLens 核心逻辑
+   1. 保留原项目模块结构
+   2. 同传页面 = 左PPT / 中实时原文+译文 / 右实时术语
+   3. PPT根据当前文本关键词自动滚动
+   4. 浏览器支持SpeechRecognition时使用真实麦克风
+   5. 后端存在 /api/live/translate 时，可替换为真正AI翻译
+   6. 没有后端时使用演示数据，不会卡死页面
+   ========================================================= */
+const API_BASE = "";
+let recognition = null, live = false, demoTimer = null, segmentNo = 0, currentSlide = 1;
+let partialEl = null, selectedCourse = "Digital Marketing";
+
+const demoData = [
+ {ko:"오늘은 소비자 행동과 디지털 마케팅 전략에 대해서 설명하겠습니다.",zh:"今天我们来讲解消费者行为与数字营销战略。",terms:[["소비자 행동","消费者行为","Consumer Behavior"]],slide:1},
+ {ko:"소비자는 먼저 문제를 인식하고 정보를 탐색합니다.",zh:"消费者首先识别需求，然后搜索相关信息。",terms:[["정보 탐색","信息搜索","Information Search"]],slide:2},
+ {ko:"그 다음 대안을 평가하고 구매 의사결정을 내립니다.",zh:"接下来，消费者评估不同方案并做出购买决策。",terms:[["구매 의사결정","购买决策","Purchase Decision"]],slide:2},
+ {ko:"STP 전략에서는 시장을 세분화하고 목표 시장을 선정합니다.",zh:"在STP战略中，我们进行市场细分并选择目标市场。",terms:[["시장 세분화","市场细分","Segmentation"],["목표 시장","目标市场","Target Market"]],slide:3},
+ {ko:"마지막으로 포지셔닝을 통해 브랜드를 소비자의 인식 속에 자리 잡게 합니다.",zh:"最后，通过定位让品牌在消费者心中形成清晰的位置。",terms:[["포지셔닝","市场定位","Positioning"]],slide:3},
+ {ko:"마케팅 믹스는 Product, Price, Place, Promotion으로 구성됩니다.",zh:"营销组合由产品、价格、渠道和促销组成。",terms:[["마케팅 믹스","营销组合","Marketing Mix"],["Promotion","促销","Promotion"]],slide:4},
+ {ko:"고객 여정은 인지도에서 고려, 전환, 유지 단계로 이어집니다.",zh:"客户旅程从认知、考虑、转化一直延伸到留存。",terms:[["고객 여정","客户旅程","Customer Journey"],["Retention","留存","Retention"]],slide:5}
+];
+
+function showPage(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');}
+function selectCourse(el,name){document.querySelectorAll('.course-chip').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selectedCourse=name;document.getElementById('courseBadge').textContent='当前课程：'+name;}
+function recognizeSchedule(){const f=document.getElementById('scheduleFile').files[0];document.getElementById('courseList').innerHTML=f?'<span class="course-chip selected">已读取：'+escapeHtml(f.name)+'</span><div class="mini">下一步接OCR即可自动生成课程卡片。</div>':'请先选择课程表图片或PDF。';}
+function loadDemoPPT(){showPage('lecture');document.getElementById('courseBadge').textContent='当前课程：'+selectedCourse;alert('演示PPT已载入。正式版上传PPT后，由后端解析真实页码。');}
+
+function setStatus(text,on=false){const s=document.getElementById('liveStatus');s.textContent=text;s.classList.toggle('live',on)}
+function setMeter(){document.getElementById('audioMeter').style.width=(18+Math.random()*78)+'%'}
+function addSegment(original,translation,partial=false){
+ const box=document.getElementById('transcript');if(box.querySelector('.empty'))box.innerHTML='';
+ const el=document.createElement('div');el.className='segment'+(partial?' partial current':'');el.innerHTML='<div class="time">'+new Date().toLocaleTimeString()+' · LIVE</div><div class="original">'+escapeHtml(original)+'</div><div class="translation">'+escapeHtml(translation||'翻译中…')+'</div>';
+ box.appendChild(el);box.scrollTop=box.scrollHeight;document.querySelectorAll('.segment.current').forEach(x=>x.classList.remove('current'));el.classList.add('current');return el;
+}
+function updateCurrentCaption(original,translation){document.getElementById('liveOriginal').textContent=original||'等待老师讲话…';document.getElementById('liveTranslation').textContent=translation||'翻译中…'}
+function addTerms(terms){
+ const box=document.getElementById('terms');if(box.querySelector('.empty'))box.innerHTML='';
+ [...terms].reverse().forEach(t=>{const el=document.createElement('div');el.className='term';el.innerHTML='<strong>'+escapeHtml(t[0])+'</strong><div class="cn">'+escapeHtml(t[1])+'</div><div class="en">'+escapeHtml(t[2]||'')+'</div><div class="source">实时从课堂原文 / PPT提取</div>';box.prepend(el)});
+}
+function extractTermsFromText(text){
+ const rules=[
+  ['소비자 행동','消费者行为','Consumer Behavior'],['consumer behavior','消费者行为','Consumer Behavior'],['시장 세분화','市场细分','Segmentation'],['segmentation','市场细分','Segmentation'],['targeting','目标市场','Targeting'],['positioning','市场定位','Positioning'],['포지셔닝','市场定位','Positioning'],['구매 의사결정','购买决策','Purchase Decision'],['purchase decision','购买决策','Purchase Decision'],['마케팅 믹스','营销组合','Marketing Mix'],['marketing mix','营销组合','Marketing Mix'],['customer journey','客户旅程','Customer Journey'],['고객 여정','客户旅程','Customer Journey'],['retention','留存','Retention']
+ ];
+ const lower=text.toLowerCase();return rules.filter(r=>lower.includes(r[0].toLowerCase())).map(r=>[r[0],r[1],r[2]]);
+}
+function syncPPT(slide){
+ const slides=[...document.querySelectorAll('.ppt-slide')];const target=slides.find(x=>Number(x.dataset.slide)===Number(slide));if(!target)return;slides.forEach(x=>x.classList.remove('current-slide'));target.classList.add('current-slide');target.scrollIntoView({behavior:'smooth',block:'center'});currentSlide=slide;document.getElementById('slideIndicator').textContent='第 '+slide+' / '+slides.length+' 页';
+}
+function syncPPTByText(text){
+ const slides=[...document.querySelectorAll('.ppt-slide')];const lower=text.toLowerCase();let best=currentSlide,bestScore=0;
+ slides.forEach(s=>{let score=0;(s.dataset.keywords||'').toLowerCase().split(/\s+/).forEach(k=>{if(k&&lower.includes(k))score++});if(score>bestScore){bestScore=score;best=Number(s.dataset.slide)}});if(bestScore>0)syncPPT(best);
+}
+
+async function translateText(text){
+ if(!text)return '';
+ try{
+  const res=await fetch(API_BASE+'/api/live/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,source:'ko',target:document.getElementById('targetLang')?.value||'zh-CN',course:selectedCourse})});
+  if(res.ok){const data=await res.json();return data.translation||data.translatedText||data.text||''}
+ }catch(e){}
+ // 没有后端时，先用本地演示映射；不会伪装成生产级AI翻译。
+ const hit=demoData.find(x=>x.ko===text);return hit?hit.zh:'翻译中…';
+}
+
+async function processFinalText(text){
+ if(!text)return;setMeter();
+ const terms=extractTermsFromText(text);const d=demoData.find(x=>x.ko===text);if(d)terms.push(...d.terms);
+ updateCurrentCaption(text,'翻译中…');
+ const translation=await translateText(text);updateCurrentCaption(text,translation);addSegment(text,translation,false);if(terms.length)addTerms(uniqueTerms(terms));syncPPTByText(text);if(d)syncPPT(d.slide);segmentNo++;
+}
+function uniqueTerms(arr){const seen=new Set();return arr.filter(t=>{const k=t[0]+'|'+t[1];if(seen.has(k))return false;seen.add(k);return true})}
+
+function startLive(){
+ if(live)return;live=true;setStatus('● 同传进行中',true);document.getElementById('micState').textContent='🎙️ 麦克风监听中';document.getElementById('startBtn').disabled=true;
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){startDemoFallback();return;}
+ recognition=new SR();recognition.lang='ko-KR';recognition.continuous=true;recognition.interimResults=true;
+ recognition.onresult=async(e)=>{
+  let finalText='',partialText='';
+  for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t;else partialText+=t}
+  if(partialText){updateCurrentCaption(partialText,'실시간 번역 중…');if(partialEl)partialEl.remove();partialEl=addSegment(partialText,'实时翻译中…',true)}
+  if(finalText){if(partialEl){partialEl.remove();partialEl=null}await processFinalText(finalText)}
+ };
+ recognition.onerror=(e)=>{document.getElementById('micState').textContent='⚠️ 麦克风识别失败，使用演示模式';startDemoFallback()};
+ recognition.onend=()=>{if(live)try{recognition.start()}catch(e){}};
+ try{recognition.start()}catch(e){startDemoFallback()}
+}
+function startDemoFallback(){
+ if(demoTimer)return;let i=0;document.getElementById('micState').textContent='🎙️ 演示同传模式';
+ demoTimer=setInterval(()=>{if(!live)return;const d=demoData[i%demoData.length];updateCurrentCaption(d.ko,d.zh);addSegment(d.ko,d.zh);addTerms(d.terms);syncPPT(d.slide);setMeter();i++},2200);
+}
+function stopLive(){live=false;if(recognition){try{recognition.stop()}catch(e){}recognition=null}if(demoTimer){clearInterval(demoTimer);demoTimer=null}if(partialEl){partialEl.remove();partialEl=null}setStatus('● 已停止');document.getElementById('micState').textContent='麦克风待机';document.getElementById('startBtn').disabled=false;document.getElementById('audioMeter').style.width='0'}
+function clearLive(){stopLive();document.getElementById('transcript').innerHTML='<div class="empty">课堂记录已清空。</div>';document.getElementById('terms').innerHTML='<div class="empty">检测到术语后会立即显示</div>';updateCurrentCaption('等待老师讲话…','实时翻译将在这里出现');syncPPT(1)}
+
+function generateNotes(){const box=document.getElementById('smartNotes');box.innerHTML='<h3>本节课AI双语笔记</h3><p style="margin-top:10px">① 消费者行为 → 问题认知 → 信息搜索 → 方案评估 → 购买 → 购后评价。</p><p style="margin-top:8px">② STP：Segmentation / Targeting / Positioning。</p><p style="margin-top:8px">③ 专业术语会从实时同传记录与PPT中自动汇总。</p>'}
+function generateExamPack(){const s=document.getElementById('examScope').value||'未填写考试范围';document.getElementById('examPack').innerHTML='<h3>🎯 考试复习包</h3><p style="margin-top:10px"><b>考试范围：</b>'+escapeHtml(s)+'</p><hr style="margin:14px 0;border-color:#334155"><p>⭐ 高频术语：Consumer Behavior / Segmentation / Targeting / Positioning</p><p style="margin-top:8px">⭐ 根据教授课堂强调内容生成预测考点。</p>'}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+</script>
+</body>
+</html>
